@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 
 // const db = require('../data/db-config');
 const Users = require('./users-model');
+const protected = require('./users-middleware/protected');
+const restricted = require('./users-middleware/restricted');
 
 const router = express.Router();
 
@@ -35,6 +37,7 @@ router.post('/login', (req, res) => {
             .first()
             .then(user => {
                 if (user && bcrypt.compareSync(password, user.password)) {
+                    req.session.username = user.username;
                     res.status(200).json({ message: `Welcome ${user.username}` })
                 } else {
                     res.status(401).json({ message: 'Invalid credentials' })
@@ -44,7 +47,8 @@ router.post('/login', (req, res) => {
     } else res.status(400).json({ message: 'Please provide valid credentials '})
 })
 
-router.get('/', protected, (req, res) => {
+router.get('/', restricted, (req, res) => {
+    console.log('Username from users-router ', req.session.username)
     Users.find()
         .then(users => res.json(users))
         .catch(err => res.send(err))
@@ -65,23 +69,23 @@ router.get('/logout', (req, res) => {
     }
 })
 
-function protected (req, res, next) {
-    const { username, password } = req.headers;
+// function protected (req, res, next) {
+//     const { username, password } = req.headers;
 
-    if (username && password) {
-        Users.findBy({ username })
-            .first()
-            .then(user => {
-                if (user && bcrypt.compareSync(password, user.password)) {
-                    next();
-                } else {
-                    res.status(401).json({ message: 'Invalid Credentials' })
-                }
-            })
-            .catch(err => res.status(500).json(err))
-    } else {
-        res.status(400).json({ message: 'Please provide valid credentials' })
-    }
-};
+//     if (username && password) {
+//         Users.findBy({ username })
+//             .first()
+//             .then(user => {
+//                 if (user && bcrypt.compareSync(password, user.password)) {
+//                     next();
+//                 } else {
+//                     res.status(401).json({ message: 'Invalid Credentials' })
+//                 }
+//             })
+//             .catch(err => res.status(500).json(err))
+//     } else {
+//         res.status(400).json({ message: 'Please provide valid credentials' })
+//     }
+// };
 
 module.exports = router;
