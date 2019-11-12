@@ -2,7 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const bcrypt = require('bcryptjs');
 
-const db = require('../data/db-config');
+// const db = require('../data/db-config');
 const Users = require('./users-model');
 
 const router = express.Router();
@@ -12,6 +12,8 @@ router.use(express.json());
 
 router.post('/register', (req, res) => {
     let user = req.body;
+    // const hash = bcrypt.hashSync(user.password, 8);
+    // user.password = hash;
 
     if (user) {
         const hash = bcrypt.hashSync(user.password, 8);
@@ -27,7 +29,7 @@ router.post('/register', (req, res) => {
 
 router.post('/login', (req, res) => {
     let { username, password } = req.body;
-
+    console.log('session from users-router ', req.session);
     if (username && password) {
         Users.findBy({ username })
             .first()
@@ -52,6 +54,15 @@ router.get('/protected', protected, (req, res) => {
     Users.protectedPage()
     .then(secret => res.json('You accessed the secret page'))
     .catch(err => res.status(500).json({ message: 'You are not allowed in here' }))
+})
+
+router.get('/logout', (req, res) => {
+    if (req.session) {
+        req.session.destroy();
+        res.status(200).json({ message: 'Successfully logged out' })
+    } else {
+        res.status(200).json({ message: 'You are already logged out' })
+    }
 })
 
 function protected (req, res, next) {
