@@ -4,7 +4,8 @@ module.exports = {
     find,
     findBy,
     findById,
-    add
+    add,
+    protectedPage
 }
 
 function find() {
@@ -26,4 +27,8 @@ function add(user) {
         const [id] = user;
         return findById(id);
     })
+}
+
+function protectedPage() {
+    return db('users').select('id')
 }
